@@ -93,11 +93,11 @@
         </select>
       </div>
       <div class="control-group">
-        <div class="control-label">Normal Alloc (primary) <span class="control-value" id="val_hedge_normal">80</span>%</div>
+        <div class="control-label">Normal Alloc (primary) <input class="control-value" id="val_hedge_normal" value="80">%</div>
         <input type="range" min="50" max="100" value="80" step="5" id="hedge_normal" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Defensive Alloc (primary) <span class="control-value" id="val_hedge_defensive">30</span>%</div>
+        <div class="control-label">Defensive Alloc (primary) <input class="control-value" id="val_hedge_defensive" value="30">%</div>
         <input type="range" min="0" max="50" value="30" step="5" id="hedge_defensive" data-param>
       </div>
       <p class="note">Signal=buy: <span id="hedgeNormalDesc">80% primary / 20% hedge</span>. Signal=sell: <span id="hedgeDefensiveDesc">30% primary / 70% hedge</span>.</p>
@@ -126,11 +126,11 @@
     <!-- MA Crossover -->
     <div class="params-panel active" id="params_ma_crossover">
       <div class="control-group">
-        <div class="control-label">Fast Window <span class="control-value" id="val_fast">50</span>d</div>
+        <div class="control-label">Fast Window <input class="control-value" id="val_fast_window" value="50">d</div>
         <input type="range" min="5" max="100" value="50" id="fast_window" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Slow Window <span class="control-value" id="val_slow">200</span>d</div>
+        <div class="control-label">Slow Window <input class="control-value" id="val_slow_window" value="200">d</div>
         <input type="range" min="50" max="400" value="200" id="slow_window" data-param>
       </div>
       <div class="control-group">
@@ -145,15 +145,15 @@
     <!-- RSI -->
     <div class="params-panel" id="params_rsi">
       <div class="control-group">
-        <div class="control-label">RSI Period <span class="control-value" id="val_rsi_period">14</span>d</div>
+        <div class="control-label">RSI Period <input class="control-value" id="val_rsi_period" value="14">d</div>
         <input type="range" min="5" max="30" value="14" id="rsi_period" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Oversold <span class="control-value" id="val_oversold">30</span></div>
+        <div class="control-label">Oversold <input class="control-value" id="val_oversold" value="30"></div>
         <input type="range" min="10" max="45" value="30" id="oversold" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Overbought <span class="control-value" id="val_overbought">70</span></div>
+        <div class="control-label">Overbought <input class="control-value" id="val_overbought" value="70"></div>
         <input type="range" min="55" max="90" value="70" id="overbought" data-param>
       </div>
     </div>
@@ -161,15 +161,15 @@
     <!-- Bollinger -->
     <div class="params-panel" id="params_bollinger">
       <div class="control-group">
-        <div class="control-label">BB Window <span class="control-value" id="val_bb_window">20</span>d</div>
+        <div class="control-label">BB Window <input class="control-value" id="val_bb_window" value="20">d</div>
         <input type="range" min="10" max="60" value="20" id="bb_window" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Std Dev <span class="control-value" id="val_bb_std">2.0</span></div>
+        <div class="control-label">Std Dev <input class="control-value" id="val_bb_std" value="2.0"></div>
         <input type="range" min="10" max="35" value="20" id="bb_std" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Squeeze Lookback <span class="control-value" id="val_squeeze_lb">120</span>d</div>
+        <div class="control-label">Squeeze Lookback <input class="control-value" id="val_squeeze_lb" value="120">d</div>
         <input type="range" min="30" max="252" value="120" id="squeeze_lb" data-param>
       </div>
     </div>
@@ -177,11 +177,11 @@
     <!-- Dual Momentum -->
     <div class="params-panel" id="params_dual_momentum">
       <div class="control-group">
-        <div class="control-label">Lookback <span class="control-value" id="val_dm_lookback">252</span>d</div>
+        <div class="control-label">Lookback <input class="control-value" id="val_dm_lookback" value="252">d</div>
         <input type="range" min="60" max="365" value="252" id="dm_lookback" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Rebalance Every <span class="control-value" id="val_dm_rebal">21</span>d</div>
+        <div class="control-label">Rebalance Every <input class="control-value" id="val_dm_rebal" value="21">d</div>
         <input type="range" min="5" max="63" value="21" id="dm_rebal" data-param>
       </div>
       <p class="note">Rotates between primary ETF and TLT (safe haven) based on 12-month momentum vs risk-free rate.</p>
@@ -197,7 +197,7 @@
         </select>
       </div>
       <div class="control-group">
-        <div class="control-label">Signal MA <span class="control-value" id="val_congress_ma">50</span>d</div>
+        <div class="control-label">Signal MA <input class="control-value" id="val_congress_ma" value="50">d</div>
         <input type="range" min="10" max="200" value="50" id="congress_ma" data-param>
       </div>
       <p class="note">Uses NANC/KRUZ price trend as a proxy signal, applied to your chosen primary ETF. Data starts Feb 2023.</p>
@@ -226,11 +226,11 @@
         </select>
       </div>
       <div class="control-group">
-        <div class="control-label">Lookback <span class="control-value" id="val_rotation_lookback">63</span>d</div>
+        <div class="control-label">Lookback <input class="control-value" id="val_rotation_lookback" value="63">d</div>
         <input type="range" min="21" max="252" value="63" id="rotation_lookback" data-param>
       </div>
       <div class="control-group">
-        <div class="control-label">Rebalance Every <span class="control-value" id="val_rotation_rebal">21</span>d</div>
+        <div class="control-label">Rebalance Every <input class="control-value" id="val_rotation_rebal" value="21">d</div>
         <input type="range" min="5" max="63" value="21" id="rotation_rebal" data-param>
       </div>
       <p class="note">At each rebalance, ranks all basket ETFs by the chosen metric over the lookback window and goes all-in on the winner.</p>
@@ -259,7 +259,7 @@
         </select>
       </div>
       <div class="control-group">
-        <div class="control-label">Signal Window <span class="control-value" id="val_moon_window">2</span>d</div>
+        <div class="control-label">Signal Window <input class="control-value" id="val_moon_window" value="2">d</div>
         <input type="range" min="0" max="5" value="2" id="moon_window" data-param>
       </div>
     </div>

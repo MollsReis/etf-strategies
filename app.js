@@ -1072,18 +1072,31 @@ document.getElementById('strategyList').addEventListener('click', e => {
   debouncedRun();
 });
 
-// Range slider labels
+// Range slider ↔ input sync
 document.querySelectorAll('input[type="range"]').forEach(slider => {
   const valId = 'val_' + slider.id;
   const valEl = document.getElementById(valId);
-  if (valEl) {
-    // Special formatting
-    slider.addEventListener('input', () => {
-      let display = slider.value;
-      if (slider.id === 'bb_std') display = (parseInt(slider.value) / 10).toFixed(1);
-      valEl.textContent = display;
-    });
-  }
+  if (!valEl) return;
+
+  // Slider → input
+  slider.addEventListener('input', () => {
+    let display = slider.value;
+    if (slider.id === 'bb_std') display = (parseInt(slider.value) / 10).toFixed(1);
+    valEl.value = display;
+  });
+
+  // Input → slider
+  valEl.addEventListener('change', () => {
+    let raw = valEl.value;
+    if (slider.id === 'bb_std') raw = Math.round(parseFloat(raw) * 10);
+    const num = parseInt(raw);
+    if (isNaN(num)) { valEl.value = slider.value; return; }
+    const clamped = Math.min(parseInt(slider.max), Math.max(parseInt(slider.min), num));
+    slider.value = clamped;
+    if (slider.id === 'bb_std') valEl.value = (clamped / 10).toFixed(1);
+    else valEl.value = clamped;
+    debouncedRun();
+  });
 });
 
 // Hedge toggle
@@ -1093,12 +1106,12 @@ document.getElementById('hedgeEnabled').addEventListener('change', e => {
 });
 document.getElementById('hedge_normal').addEventListener('input', () => {
   const v = document.getElementById('hedge_normal').value;
-  document.getElementById('val_hedge_normal').textContent = v;
+  document.getElementById('val_hedge_normal').value = v;
   document.getElementById('hedgeNormalDesc').textContent = `${v}% primary / ${100 - v}% hedge`;
 });
 document.getElementById('hedge_defensive').addEventListener('input', () => {
   const v = document.getElementById('hedge_defensive').value;
-  document.getElementById('val_hedge_defensive').textContent = v;
+  document.getElementById('val_hedge_defensive').value = v;
   document.getElementById('hedgeDefensiveDesc').textContent = `${v}% primary / ${100 - v}% hedge`;
 });
 document.querySelectorAll('#hedgeEtf, #hedge_normal, #hedge_defensive').forEach(el => {

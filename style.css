@@ -139,7 +139,26 @@ sidebar {
   display: flex;
   justify-content: space-between;
 }
-.control-value { color: var(--accent); font-weight: 500; }
+.control-value {
+  color: var(--accent);
+  font-weight: 500;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  font-family: var(--mono);
+  font-size: inherit;
+  width: 3.5ch;
+  text-align: right;
+  padding: 0;
+  outline: none;
+  cursor: text;
+}
+.control-value:hover {
+  border-bottom-color: var(--accent);
+}
+.control-value:focus {
+  border-bottom-color: var(--accent);
+}
 
 input[type="range"] {
   width: 100%;
