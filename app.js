@@ -339,6 +339,155 @@ function strategySports(prices, matchResults, params) {
 }
 
 // ============================================================
+// ROTATION STRATEGY
+// ============================================================
+
+async function strategyRotation(dateFrom, dateTo, params) {
+  const basket = params.rotation_basket;
+  const lookback = params.rotation_lookback;
+  const rebalDays = params.rotation_rebal;
+  const metric = params.rotation_metric;
+
+  const allPrices = {};
+  for (const ticker of basket) {
+    allPrices[ticker] = await fetchPrices(ticker, dateFrom, dateTo);
+  }
+
+  const refPrices = allPrices[basket[0]];
+
+  const closeMaps = {};
+  for (const ticker of basket) {
+    closeMaps[ticker] = {};
+    for (const p of allPrices[ticker]) closeMaps[ticker][p.date] = p.close;
+  }
+
+  function rankETFs(endIdx) {
+    const scores = [];
+    for (const ticker of basket) {
+      const startIdx = Math.max(0, endIdx - lookback);
+      const startDate = refPrices[startIdx].date;
+      const endDate = refPrices[endIdx].date;
+      const startPrice = closeMaps[ticker][startDate];
+      const endPrice = closeMaps[ticker][endDate];
+
+      if (!startPrice || !endPrice) { scores.push({ ticker, score: -Infinity }); continue; }
+
+      if (metric === 'momentum') {
+        scores.push({ ticker, score: (endPrice - startPrice) / startPrice });
+      } else if (metric === 'sharpe') {
+        const returns = [];
+        for (let j = startIdx + 1; j <= endIdx; j++) {
+          const prev = closeMaps[ticker][refPrices[j - 1].date];
+          const cur = closeMaps[ticker][refPrices[j].date];
+          if (prev && cur) returns.push((cur - prev) / prev);
+        }
+        if (returns.length < 2) { scores.push({ ticker, score: -Infinity }); continue; }
+        const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+        const std = Math.sqrt(returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length);
+        scores.push({ ticker, score: std > 0 ? (mean / std) * Math.sqrt(252) : 0 });
+      } else if (metric === 'min_drawdown') {
+        let peak = startPrice;
+        let maxDD = 0;
+        for (let j = startIdx; j <= endIdx; j++) {
+          const price = closeMaps[ticker][refPrices[j].date];
+          if (!price) continue;
+          if (price > peak) peak = price;
+          const dd = (peak - price) / peak;
+          if (dd > maxDD) maxDD = dd;
+        }
+        scores.push({ ticker, score: -maxDD });
+      }
+    }
+    scores.sort((a, b) => b.score - a.score);
+    return scores;
+  }
+
+  const signals = [];
+  let currentTicker = basket[0];
+  let daysSinceRebal = 0;
+
+  for (let i = 0; i < refPrices.length; i++) {
+    daysSinceRebal++;
+    if (i >= lookback && daysSinceRebal >= rebalDays) {
+      const ranking = rankETFs(i);
+      currentTicker = ranking[0].ticker;
+      daysSinceRebal = 0;
+    }
+    signals.push({
+      date: refPrices[i].date,
+      signal: 1,
+      ticker: currentTicker,
+      reason: `Hold ${currentTicker}`,
+    });
+  }
+
+  return { signals, refPrices, allPrices, closeMaps };
+}
+
+function runBacktestRotation(refPrices, signals, closeMaps) {
+  const initial = 10000;
+  let portfolioValue = initial;
+  const equity = [];
+  const trades = [];
+  let peakEquity = initial;
+  let maxDrawdown = 0;
+  let winningTrades = 0;
+  let totalTrades = 0;
+  let entryValue = initial;
+  let currentTicker = signals[0].ticker;
+
+  for (let i = 0; i < refPrices.length; i++) {
+    const sig = signals[i];
+
+    if (sig.ticker !== currentTicker) {
+      if (portfolioValue > entryValue) winningTrades++;
+      totalTrades++;
+      trades.push({ date: sig.date, action: 'ROTATE', reason: `${currentTicker} → ${sig.ticker}`, price: closeMaps[sig.ticker][sig.date] || 0, portfolio: portfolioValue });
+      entryValue = portfolioValue;
+      currentTicker = sig.ticker;
+    }
+
+    if (i > 0) {
+      const prevDate = refPrices[i - 1].date;
+      const curDate = refPrices[i].date;
+      const prevTicker = signals[i - 1].ticker;
+      const prevPrice = closeMaps[prevTicker][prevDate];
+      const curPrice = closeMaps[prevTicker][curDate];
+      if (prevPrice && curPrice) {
+        portfolioValue *= curPrice / prevPrice;
+      }
+    }
+
+    equity.push({ date: sig.date, value: portfolioValue });
+    if (portfolioValue > peakEquity) peakEquity = portfolioValue;
+    const dd = (peakEquity - portfolioValue) / peakEquity;
+    if (dd > maxDrawdown) maxDrawdown = dd;
+  }
+
+  const finalValue = equity[equity.length - 1]?.value || initial;
+  const years = refPrices.length / 252;
+  const totalReturn = (finalValue - initial) / initial;
+  const cagr = Math.pow(finalValue / initial, 1 / years) - 1;
+
+  const dailyReturns = equity.slice(1).map((e, i) => (e.value - equity[i].value) / equity[i].value);
+  const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+  const stdReturn = Math.sqrt(dailyReturns.reduce((a, b) => a + (b - meanReturn) ** 2, 0) / dailyReturns.length);
+  const sharpe = stdReturn > 0 ? (meanReturn / stdReturn) * Math.sqrt(252) : 0;
+
+  return {
+    equity,
+    trades,
+    totalReturn,
+    cagr,
+    sharpe,
+    maxDrawdown,
+    winRate: totalTrades > 0 ? winningTrades / totalTrades : null,
+    totalTrades,
+    timeInMarket: 1,
+  };
+}
+
+// ============================================================
 // BACKTEST ENGINE
 // ============================================================
 
