@@ -880,6 +880,10 @@ function getParams() {
     hedge_etf: document.getElementById('hedgeEtf').value,
     hedge_normal: parseInt(document.getElementById('hedge_normal').value),
     hedge_defensive: parseInt(document.getElementById('hedge_defensive').value),
+    rotation_basket: [...document.querySelectorAll('#rotationBasket input:checked')].map(cb => cb.value),
+    rotation_metric: document.getElementById('rotation_metric').value,
+    rotation_lookback: parseInt(document.getElementById('rotation_lookback').value),
+    rotation_rebal: parseInt(document.getElementById('rotation_rebal').value),
   };
 }
 
@@ -944,6 +948,23 @@ async function runBacktestFull() {
         }
         signals = strategySports(prices, matchResults, params);
         break;
+      }
+      case 'rotation': {
+        if (params.rotation_basket.length < 2) throw new Error('Select at least 2 ETFs for rotation');
+        const rotResult = await strategyRotation(params.date_from, params.date_to, params);
+        const { signals: rotSignals, refPrices, closeMaps } = rotResult;
+        const rotBacktest = runBacktestRotation(refPrices, rotSignals, closeMaps);
+        const rotBH = runBuyAndHold(refPrices);
+
+        document.getElementById('dataRange').textContent = `${refPrices[0].date} → ${refPrices[refPrices.length - 1].date} (${refPrices.length}d)`;
+        updateCharts(rotBacktest, rotBH);
+        updateMetrics(rotBacktest, rotBH);
+        updateTradeLog(rotBacktest.trades);
+
+        const elapsed = Date.now() - startTime;
+        document.getElementById('calcTime').textContent = `${elapsed}ms`;
+        setStatus('ok', 'ready');
+        return;
       }
       default:
         signals = prices.map(p => ({ date: p.date, signal: 1 }));
@@ -1098,6 +1119,9 @@ document.querySelectorAll('[data-param], #primaryEtf, #dateFrom, #dateTo').forEa
     el.addEventListener('input', () => debouncedRun());
   }
 });
+
+// Rotation basket checkboxes
+document.getElementById('rotationBasket').addEventListener('change', () => debouncedRun());
 
 // Manual run button
 document.getElementById('runBtn').addEventListener('click', runBacktestFull);
