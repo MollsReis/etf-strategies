@@ -438,6 +438,93 @@ function runBuyAndHold(prices) {
   };
 }
 
+function runBacktestHedged(primaryPrices, hedgePrices, signals, normalPct, defensivePct) {
+  const initial = 10000;
+  let portfolioValue = initial;
+  const equity = [];
+  const trades = [];
+  let peakEquity = initial;
+  let maxDrawdown = 0;
+  let winningTrades = 0;
+  let totalTrades = 0;
+  let daysInMarket = 0;
+  let entryValue = null;
+  let resolvedSignal = 0;
+  let prevAlloc = null;
+
+  const hedgeMap = {};
+  for (const p of hedgePrices) hedgeMap[p.date] = p.close;
+
+  for (let i = 0; i < primaryPrices.length; i++) {
+    const p = primaryPrices[i];
+    const sig = signals[i];
+    const newSignal = sig.signal !== undefined ? sig.signal : resolvedSignal;
+    resolvedSignal = newSignal;
+
+    const primaryPct = newSignal === 1 ? normalPct / 100 : defensivePct / 100;
+    const allocKey = `${primaryPct}`;
+
+    if (allocKey !== prevAlloc && prevAlloc !== null) {
+      const action = newSignal === 1 ? 'REBAL→NORMAL' : 'REBAL→DEFENSIVE';
+      trades.push({ date: p.date, action, reason: sig.reason || '—', price: p.close, portfolio: portfolioValue });
+      if (newSignal === 0 && entryValue !== null) {
+        if (portfolioValue > entryValue) winningTrades++;
+        entryValue = null;
+        totalTrades++;
+      }
+      if (newSignal === 1 && entryValue === null) {
+        entryValue = portfolioValue;
+      }
+    } else if (prevAlloc === null && newSignal === 1) {
+      entryValue = portfolioValue;
+    }
+    prevAlloc = allocKey;
+
+    if (i > 0) {
+      const prevPrimary = primaryPrices[i - 1].close;
+      const prevHedge = hedgeMap[primaryPrices[i - 1].date];
+      const curHedge = hedgeMap[p.date];
+
+      const prevSignal = signals[i - 1].signal !== undefined ? signals[i - 1].signal : 0;
+      const prevPrimaryPct = prevSignal === 1 ? normalPct / 100 : defensivePct / 100;
+      const prevHedgePct = 1 - prevPrimaryPct;
+
+      const primaryReturn = (p.close - prevPrimary) / prevPrimary;
+      const hedgeReturn = (prevHedge && curHedge) ? (curHedge - prevHedge) / prevHedge : 0;
+      const dailyReturn = prevPrimaryPct * primaryReturn + prevHedgePct * hedgeReturn;
+      portfolioValue *= (1 + dailyReturn);
+    }
+
+    equity.push({ date: p.date, value: portfolioValue });
+    if (newSignal === 1) daysInMarket++;
+    if (portfolioValue > peakEquity) peakEquity = portfolioValue;
+    const dd = (peakEquity - portfolioValue) / peakEquity;
+    if (dd > maxDrawdown) maxDrawdown = dd;
+  }
+
+  const finalValue = equity[equity.length - 1]?.value || initial;
+  const years = primaryPrices.length / 252;
+  const totalReturn = (finalValue - initial) / initial;
+  const cagr = Math.pow(finalValue / initial, 1 / years) - 1;
+
+  const dailyReturns = equity.slice(1).map((e, i) => (e.value - equity[i].value) / equity[i].value);
+  const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+  const stdReturn = Math.sqrt(dailyReturns.reduce((a, b) => a + (b - meanReturn) ** 2, 0) / dailyReturns.length);
+  const sharpe = stdReturn > 0 ? (meanReturn / stdReturn) * Math.sqrt(252) : 0;
+
+  return {
+    equity,
+    trades,
+    totalReturn,
+    cagr,
+    sharpe,
+    maxDrawdown,
+    winRate: totalTrades > 0 ? winningTrades / totalTrades : null,
+    totalTrades,
+    timeInMarket: daysInMarket / primaryPrices.length,
+  };
+}
+
 // ============================================================
 // CHART MANAGEMENT
 // ============================================================
@@ -713,7 +800,13 @@ async function runBacktestFull() {
         signals = prices.map(p => ({ date: p.date, signal: 1 }));
     }
 
-    const result = runBacktest(prices, signals);
+    let result;
+    if (params.hedge_enabled && params.strategy !== 'rotation') {
+      const hedgePrices = await fetchPrices(params.hedge_etf, params.date_from, params.date_to);
+      result = runBacktestHedged(prices, hedgePrices, signals, params.hedge_normal, params.hedge_defensive);
+    } else {
+      result = runBacktest(prices, signals);
+    }
     const bhResult = runBuyAndHold(prices);
 
     updateCharts(result, bhResult);
