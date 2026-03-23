@@ -640,6 +640,10 @@ function getParams() {
     sports_team: document.getElementById('sports_team').value,
     sports_mode: document.getElementById('sports_mode').value,
     football_api_key: document.getElementById('football_api_key').value,
+    hedge_enabled: document.getElementById('hedgeEnabled').checked,
+    hedge_etf: document.getElementById('hedgeEtf').value,
+    hedge_normal: parseInt(document.getElementById('hedge_normal').value),
+    hedge_defensive: parseInt(document.getElementById('hedge_defensive').value),
   };
 }
 
@@ -811,6 +815,25 @@ document.querySelectorAll('input[type="range"]').forEach(slider => {
       valEl.textContent = display;
     });
   }
+});
+
+// Hedge toggle
+document.getElementById('hedgeEnabled').addEventListener('change', e => {
+  document.getElementById('hedgeControls').classList.toggle('active', e.target.checked);
+  debouncedRun();
+});
+document.getElementById('hedge_normal').addEventListener('input', () => {
+  const v = document.getElementById('hedge_normal').value;
+  document.getElementById('val_hedge_normal').textContent = v;
+  document.getElementById('hedgeNormalDesc').textContent = `${v}% primary / ${100 - v}% hedge`;
+});
+document.getElementById('hedge_defensive').addEventListener('input', () => {
+  const v = document.getElementById('hedge_defensive').value;
+  document.getElementById('val_hedge_defensive').textContent = v;
+  document.getElementById('hedgeDefensiveDesc').textContent = `${v}% primary / ${100 - v}% hedge`;
+});
+document.querySelectorAll('#hedgeEtf, #hedge_normal, #hedge_defensive').forEach(el => {
+  el.addEventListener('change', () => debouncedRun());
 });
 
 // Debounced run
