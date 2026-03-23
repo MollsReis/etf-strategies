@@ -237,7 +237,6 @@ main {
   background: var(--border);
   border: 1px solid var(--border);
   border-radius: 6px;
-  overflow: hidden;
   margin-bottom: 20px;
 }
 .metric-cell {
@@ -245,6 +244,8 @@ main {
   padding: 14px 16px;
   text-align: center;
 }
+.metric-cell:first-child { border-radius: 6px 0 0 6px; }
+.metric-cell:last-child { border-radius: 0 6px 6px 0; }
 .metric-label {
   font-size: 9px;
   letter-spacing: 0.1em;
