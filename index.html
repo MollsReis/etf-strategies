@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ETF Strategy Backtester</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">BACKTEST<span>.STUDIO</span></div>
+  <div class="status-bar">
+    <span id="statusIndicator"><span class="status-dot" id="statusDot"></span><span id="statusText">idle</span></span>
+    <span id="dataRange" style="color:var(--text3)">—</span>
+    <span id="calcTime" style="color:var(--text3)">—</span>
+  </div>
+</header>
+
+<div class="app">
+<sidebar>
+
+  <!-- Strategy Picker -->
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Strategy</div>
+    <div class="strategy-list" id="strategyList">
+      <button class="strategy-btn active" data-strategy="ma_crossover">
+        📈 MA Crossover <span class="strategy-tag tag-legit">legit</span>
+      </button>
+      <button class="strategy-btn" data-strategy="rsi">
+        📊 RSI Mean Reversion <span class="strategy-tag tag-legit">legit</span>
+      </button>
+      <button class="strategy-btn" data-strategy="bollinger">
+        🎯 Bollinger Breakout <span class="strategy-tag tag-legit">legit</span>
+      </button>
+      <button class="strategy-btn" data-strategy="dual_momentum">
+        🔄 Dual Momentum <span class="strategy-tag tag-legit">legit</span>
+      </button>
+      <button class="strategy-btn" data-strategy="congressional">
+        🏛️ Congressional <span class="strategy-tag tag-legit">legit</span>
+      </button>
+      <button class="strategy-btn" data-strategy="mercury">
+        🪐 Mercury Retrograde <span class="strategy-tag tag-silly">silly</span>
+      </button>
+      <button class="strategy-btn" data-strategy="moon">
+        🌕 Moon Cycle <span class="strategy-tag tag-silly">silly</span>
+      </button>
+      <button class="strategy-btn" data-strategy="friday13">
+        🔪 Friday the 13th <span class="strategy-tag tag-silly">silly</span>
+      </button>
+      <button class="strategy-btn" data-strategy="sports">
+        ⚽ Sports Team <span class="strategy-tag tag-silly">silly</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ETF Selection -->
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">ETF Universe</div>
+    <div class="control-group">
+      <div class="control-label">Primary ETF</div>
+      <select id="primaryEtf">
+        <option value="SPY">SPY — S&P 500</option>
+        <option value="QQQ">QQQ — Nasdaq 100</option>
+        <option value="IWM">IWM — Russell 2000</option>
+        <option value="GLD">GLD — Gold</option>
+        <option value="TLT">TLT — 20yr Treasury</option>
+        <option value="VNQ">VNQ — Real Estate</option>
+        <option value="EEM">EEM — Emerging Markets</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Date Range -->
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Date Range</div>
+    <div class="date-row">
+      <div class="control-group">
+        <div class="control-label">From</div>
+        <input type="text" id="dateFrom" value="2015-01-01" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="control-group">
+        <div class="control-label">To</div>
+        <input type="text" id="dateTo" value="2024-12-31" placeholder="YYYY-MM-DD">
+      </div>
+    </div>
+  </div>
+
+  <!-- Strategy Params -->
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Parameters</div>
+
+    <!-- MA Crossover -->
+    <div class="params-panel active" id="params_ma_crossover">
+      <div class="control-group">
+        <div class="control-label">Fast Window <span class="control-value" id="val_fast">50</span>d</div>
+        <input type="range" min="5" max="100" value="50" id="fast_window" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Slow Window <span class="control-value" id="val_slow">200</span>d</div>
+        <input type="range" min="50" max="400" value="200" id="slow_window" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">MA Type</div>
+        <select id="ma_type" data-param>
+          <option value="sma">SMA — Simple</option>
+          <option value="ema">EMA — Exponential</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- RSI -->
+    <div class="params-panel" id="params_rsi">
+      <div class="control-group">
+        <div class="control-label">RSI Period <span class="control-value" id="val_rsi_period">14</span>d</div>
+        <input type="range" min="5" max="30" value="14" id="rsi_period" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Oversold <span class="control-value" id="val_oversold">30</span></div>
+        <input type="range" min="10" max="45" value="30" id="oversold" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Overbought <span class="control-value" id="val_overbought">70</span></div>
+        <input type="range" min="55" max="90" value="70" id="overbought" data-param>
+      </div>
+    </div>
+
+    <!-- Bollinger -->
+    <div class="params-panel" id="params_bollinger">
+      <div class="control-group">
+        <div class="control-label">BB Window <span class="control-value" id="val_bb_window">20</span>d</div>
+        <input type="range" min="10" max="60" value="20" id="bb_window" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Std Dev <span class="control-value" id="val_bb_std">2.0</span></div>
+        <input type="range" min="10" max="35" value="20" id="bb_std" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Squeeze Lookback <span class="control-value" id="val_squeeze_lb">120</span>d</div>
+        <input type="range" min="30" max="252" value="120" id="squeeze_lb" data-param>
+      </div>
+    </div>
+
+    <!-- Dual Momentum -->
+    <div class="params-panel" id="params_dual_momentum">
+      <div class="control-group">
+        <div class="control-label">Lookback <span class="control-value" id="val_dm_lookback">252</span>d</div>
+        <input type="range" min="60" max="365" value="252" id="dm_lookback" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Rebalance Every <span class="control-value" id="val_dm_rebal">21</span>d</div>
+        <input type="range" min="5" max="63" value="21" id="dm_rebal" data-param>
+      </div>
+      <p class="note">Rotates between primary ETF and TLT (safe haven) based on 12-month momentum vs risk-free rate.</p>
+    </div>
+
+    <!-- Congressional -->
+    <div class="params-panel" id="params_congressional">
+      <div class="control-group">
+        <div class="control-label">Congress ETF Proxy</div>
+        <select id="congress_etf" data-param>
+          <option value="NANC">NANC — Democratic trades</option>
+          <option value="KRUZ">KRUZ — Republican trades</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Signal MA <span class="control-value" id="val_congress_ma">50</span>d</div>
+        <input type="range" min="10" max="200" value="50" id="congress_ma" data-param>
+      </div>
+      <p class="note">Uses NANC/KRUZ price trend as a proxy signal, applied to your chosen primary ETF. Data starts Feb 2023.</p>
+    </div>
+
+    <!-- Mercury -->
+    <div class="params-panel" id="params_mercury">
+      <div class="control-group">
+        <div class="control-label">Avoid Window (days before/after)</div>
+        <select id="mercury_window" data-param>
+          <option value="0">Exact retrograde period only</option>
+          <option value="3">+3 days buffer</option>
+          <option value="7">+7 days buffer</option>
+        </select>
+      </div>
+      <p class="note">Exits to cash during Mercury retrograde periods (~19% of the year). All dates pre-computed.</p>
+    </div>
+
+    <!-- Moon -->
+    <div class="params-panel" id="params_moon">
+      <div class="control-group">
+        <div class="control-label">Strategy</div>
+        <select id="moon_mode" data-param>
+          <option value="new_moon_buy">Buy on New Moon, sell on Full Moon</option>
+          <option value="waxing_hold">Hold waxing phase, cash waning phase</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Signal Window <span class="control-value" id="val_moon_window">2</span>d</div>
+        <input type="range" min="0" max="5" value="2" id="moon_window" data-param>
+      </div>
+    </div>
+
+    <!-- Friday 13th -->
+    <div class="params-panel" id="params_friday13">
+      <div class="control-group">
+        <div class="control-label">Avoidance Window</div>
+        <select id="f13_window" data-param>
+          <option value="1">Friday the 13th only</option>
+          <option value="3">Thu 12th – Mon 15th</option>
+        </select>
+      </div>
+      <p class="note">Otherwise fully invested. Expect ~30–35 avoidance days per 20yr backtest.</p>
+    </div>
+
+    <!-- Sports -->
+    <div class="params-panel" id="params_sports">
+      <div class="control-group">
+        <div class="control-label">Team (PL)</div>
+        <select id="sports_team" data-param>
+          <option value="Arsenal">Arsenal</option>
+          <option value="Manchester City">Manchester City</option>
+          <option value="Liverpool">Liverpool</option>
+          <option value="Chelsea">Chelsea</option>
+          <option value="Tottenham">Tottenham Hotspur</option>
+          <option value="Manchester United">Manchester United</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Signal Mode</div>
+        <select id="sports_mode" data-param>
+          <option value="per_result">React to every result</option>
+          <option value="streak">Ride winning streaks</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Football Data API Key</div>
+        <input type="text" id="football_api_key" placeholder="Get free key at football-data.org" data-param>
+      </div>
+      <p class="note">Uses football-data.org free API. Without a key, falls back to simulated Arsenal 2015–2024 results.</p>
+    </div>
+
+  </div>
+
+  <div class="sidebar-section">
+    <button class="run-btn" id="runBtn">▶ Run Backtest</button>
+  </div>
+
+</sidebar>
+
+<main>
+  <div class="error-banner" id="errorBanner"></div>
+
+  <!-- Metrics -->
+  <div class="metrics-strip" id="metricsStrip">
+    <div class="metric-cell">
+      <div class="metric-label">Total Return</div>
+      <div class="metric-value neu" id="m_total_return">—</div>
+      <div class="metric-sub" id="m_bh_return">vs —</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-label">CAGR</div>
+      <div class="metric-value neu" id="m_cagr">—</div>
+      <div class="metric-sub" id="m_bh_cagr">vs —</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-label">Sharpe</div>
+      <div class="metric-value neu" id="m_sharpe">—</div>
+      <div class="metric-sub">risk-adjusted</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-label">Max Drawdown</div>
+      <div class="metric-value neu" id="m_drawdown">—</div>
+      <div class="metric-sub" id="m_bh_dd">vs —</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-label">Win Rate</div>
+      <div class="metric-value neu" id="m_winrate">—</div>
+      <div class="metric-sub" id="m_trade_count">— trades</div>
+    </div>
+    <div class="metric-cell">
+      <div class="metric-label">Time in Market</div>
+      <div class="metric-value neu" id="m_time_in">—</div>
+      <div class="metric-sub">of period</div>
+    </div>
+  </div>
+
+  <!-- Equity Curve -->
+  <div class="chart-section" style="position:relative">
+    <div class="loading-overlay" id="chartLoader"><div class="spinner"></div></div>
+    <div class="chart-header">
+      <div class="chart-title">Equity Curve</div>
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:var(--accent)"></span>Strategy</span>
+        <span><span class="legend-dot" style="background:var(--text3)"></span>Buy & Hold</span>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="equityChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Delta Chart -->
+  <div class="chart-section">
+    <div class="chart-header">
+      <div class="chart-title">Return Delta vs Buy &amp; Hold</div>
+      <div class="chart-legend">
+        <span><span class="legend-dot" style="background:var(--good)"></span>Outperforming</span>
+        <span><span class="legend-dot" style="background:var(--bad)"></span>Underperforming</span>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="deltaChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Trade Log -->
+  <div class="trade-log">
+    <div class="trade-log-header">
+      <span>Recent Trades</span>
+      <span id="tradeCount" style="color:var(--text3)">—</span>
+    </div>
+    <table class="trade-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Action</th>
+          <th>Reason</th>
+          <th>Price</th>
+          <th>Portfolio Value</th>
+        </tr>
+      </thead>
+      <tbody id="tradeLog">
+        <tr><td colspan="5" style="color:var(--text3);text-align:center;padding:20px">Run a backtest to see trades</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
