@@ -266,6 +266,40 @@ main {
 .neg { color: var(--bad); }
 .neu { color: var(--text); }
 
+/* Metric tooltips */
+.has-tip {
+  cursor: help;
+  position: relative;
+  border-bottom: 1px dashed var(--text3);
+  display: inline-block;
+}
+.has-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.5;
+  padding: 10px 12px;
+  border-radius: 6px;
+  width: 240px;
+  white-space: normal;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.has-tip:hover::after {
+  opacity: 1;
+}
+
 /* Charts */
 .chart-section {
   background: var(--bg2);
