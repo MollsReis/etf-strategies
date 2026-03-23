@@ -394,3 +394,26 @@ main {
 }
 .run-btn:hover { background: #00eec0; }
 .run-btn:active { transform: scale(0.98); }
+
+/* Hedge controls */
+.hedge-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+}
+.hedge-toggle input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+.hedge-controls {
+  display: none;
+  margin-top: 12px;
+}
+.hedge-controls.active {
+  display: block;
+}

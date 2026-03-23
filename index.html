@@ -57,10 +57,9 @@
   </div>
 
   <!-- ETF Selection -->
-  <div class="sidebar-section">
-    <div class="sidebar-section-title">ETF Universe</div>
+  <div class="sidebar-section" id="etfSection">
+    <div class="sidebar-section-title">ETF</div>
     <div class="control-group">
-      <div class="control-label">Primary ETF</div>
       <select id="primaryEtf">
         <option value="SPY">SPY — S&P 500</option>
         <option value="QQQ">QQQ — Nasdaq 100</option>
@@ -70,6 +69,35 @@
         <option value="VNQ">VNQ — Real Estate</option>
         <option value="EEM">EEM — Emerging Markets</option>
       </select>
+    </div>
+    <div class="control-group">
+      <label class="hedge-toggle">
+        <input type="checkbox" id="hedgeEnabled">
+        <span>Enable hedging</span>
+      </label>
+    </div>
+    <div id="hedgeControls" class="hedge-controls">
+      <div class="control-group">
+        <div class="control-label">Hedge ETF</div>
+        <select id="hedgeEtf">
+          <option value="TLT">TLT — 20yr Treasury</option>
+          <option value="GLD">GLD — Gold</option>
+          <option value="SPY">SPY — S&P 500</option>
+          <option value="QQQ">QQQ — Nasdaq 100</option>
+          <option value="IWM">IWM — Russell 2000</option>
+          <option value="VNQ">VNQ — Real Estate</option>
+          <option value="EEM">EEM — Emerging Markets</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Normal Alloc (primary) <span class="control-value" id="val_hedge_normal">80</span>%</div>
+        <input type="range" min="50" max="100" value="80" step="5" id="hedge_normal" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Defensive Alloc (primary) <span class="control-value" id="val_hedge_defensive">30</span>%</div>
+        <input type="range" min="0" max="50" value="30" step="5" id="hedge_defensive" data-param>
+      </div>
+      <p class="note">Signal=buy: <span id="hedgeNormalDesc">80% primary / 20% hedge</span>. Signal=sell: <span id="hedgeDefensiveDesc">30% primary / 70% hedge</span>.</p>
     </div>
   </div>
 
