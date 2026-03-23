@@ -41,6 +41,9 @@
       <button class="strategy-btn" data-strategy="congressional">
         🏛️ Congressional <span class="strategy-tag tag-legit">legit</span>
       </button>
+      <button class="strategy-btn" data-strategy="rotation">
+        🔀 ETF Rotation <span class="strategy-tag tag-legit">legit</span>
+      </button>
       <button class="strategy-btn" data-strategy="mercury">
         🪐 Mercury Retrograde <span class="strategy-tag tag-silly">silly</span>
       </button>
@@ -198,6 +201,39 @@
         <input type="range" min="10" max="200" value="50" id="congress_ma" data-param>
       </div>
       <p class="note">Uses NANC/KRUZ price trend as a proxy signal, applied to your chosen primary ETF. Data starts Feb 2023.</p>
+    </div>
+
+    <!-- Rotation -->
+    <div class="params-panel" id="params_rotation">
+      <div class="control-group">
+        <div class="control-label">ETF Basket</div>
+        <div class="etf-basket" id="rotationBasket">
+          <label class="basket-item"><input type="checkbox" value="SPY" checked> SPY</label>
+          <label class="basket-item"><input type="checkbox" value="QQQ" checked> QQQ</label>
+          <label class="basket-item"><input type="checkbox" value="IWM"> IWM</label>
+          <label class="basket-item"><input type="checkbox" value="GLD" checked> GLD</label>
+          <label class="basket-item"><input type="checkbox" value="TLT" checked> TLT</label>
+          <label class="basket-item"><input type="checkbox" value="VNQ"> VNQ</label>
+          <label class="basket-item"><input type="checkbox" value="EEM"> EEM</label>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Ranking Metric</div>
+        <select id="rotation_metric" data-param>
+          <option value="momentum">Momentum (total return)</option>
+          <option value="sharpe">Sharpe ratio</option>
+          <option value="min_drawdown">Minimum drawdown</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Lookback <span class="control-value" id="val_rotation_lookback">63</span>d</div>
+        <input type="range" min="21" max="252" value="63" id="rotation_lookback" data-param>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Rebalance Every <span class="control-value" id="val_rotation_rebal">21</span>d</div>
+        <input type="range" min="5" max="63" value="21" id="rotation_rebal" data-param>
+      </div>
+      <p class="note">At each rebalance, ranks all basket ETFs by the chosen metric over the lookback window and goes all-in on the winner.</p>
     </div>
 
     <!-- Mercury -->
