@@ -877,6 +877,7 @@ const STRATEGY_START_DATES = {
   bollinger: '2015-01-01',
   dual_momentum: '2015-01-01',
   congressional: '2023-03-01',
+  rotation: '2015-01-01',
   mercury: '2015-01-01',
   moon: '2015-01-01',
   friday13: '2015-01-01',
@@ -893,6 +894,11 @@ document.getElementById('strategyList').addEventListener('click', e => {
   if (panel) panel.classList.add('active');
   const startDate = STRATEGY_START_DATES[btn.dataset.strategy];
   if (startDate) document.getElementById('dateFrom').value = startDate;
+
+  // Hide ETF picker + hedge controls for rotation (it picks its own ETFs)
+  const isRotation = btn.dataset.strategy === 'rotation';
+  document.getElementById('etfSection').style.display = isRotation ? 'none' : '';
+
   debouncedRun();
 });
 
